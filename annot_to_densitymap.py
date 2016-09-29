@@ -46,7 +46,6 @@ def get_density_map(data_name, save_data, show_image = False):
         img.tofile(data_name.replace('xml','desmap'))
 
 if __name__ == "__main__":
-    data_name = 'data/Cam253/[Cam253]-2016_4_21_15h_150f/000150.xml'
     path_name = 'data/Cam253/[Cam253]-2016_4_21_15h_150f/'
     list_name = os.listdir(path_name)
     for f in list_name:
