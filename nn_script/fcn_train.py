@@ -2,6 +2,7 @@ import tensorflow as tf
 import sys
 import os
 import tensor_data
+import numpy as np
 import data_class
 import fcn_model
 #import save_func as sf
@@ -26,9 +27,9 @@ tf.app.flags.DEFINE_string('restore_model',False,'''if restore the pre_trained_m
 
 tf.app.flags.DEFINE_string('train_log_dir','train_log',
         '''directory wherer to write event logs''')
-tf.app.flags.DEFINE_integer('max_training_iter', 1000000,
+tf.app.flags.DEFINE_integer('max_training_iter', 10000,
         '''the max number of training iteration''')
-tf.app.flags.DEFINE_float('init_learning_rate',0.01,
+tf.app.flags.DEFINE_float('init_learning_rate', 0.001,
         '''initial learning rate''')
 tf.app.flags.DEFINE_string('model_dir', 'models','''directory where to save the model''')
 tf.app.flags.DEFINE_string('txt_log', 'train_log.txt','''directory where to save the display log''')
@@ -59,35 +60,32 @@ def train():
                                                 FLAGS.feature_col, FLAGS.feature_cha), name = 'feature')
     label_ph = tf.placeholder(tf.float32, shape = (FLAGS.batch_size, FLAGS.label_row,
                                                 FLAGS.label_col, FLAGS.label_cha), name = 'label')
-
     global_step = tf.Variable(0, name = 'global_step', trainable = False)
 
     keep_prob_ph = tf.placeholder(tf.float32, name = 'keep_prob')
     train_test_phase_ph = tf.placeholder(tf.bool, name = 'phase_holder')
+
+    #fcn_model.test_infer_size(label_ph)
+
     output_shape = [FLAGS.batch_size, FLAGS.label_row, FLAGS.label_col, FLAGS.label_cha]
 
     infer = fcn_model.inference(data_ph, output_shape, keep_prob_ph, train_test_phase_ph)
     loss = fcn_model.loss(infer, label_ph)
-    
-    va = list()
-    for v in tf.trainable_variables():
-        va.append(v)
-    var_grad = tf.gradients(loss, [va[0]])[0]
-    print(var_grad)
-    exit(1)
-
     train_op = fcn_model.train_op(loss, FLAGS.init_learning_rate, global_step)
     sess = tf.Session()
+
+    init_op = tf.initialize_all_variables()
+    sess.run(init_op)
 
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord = coord, sess = sess)
 
     for i in xrange(FLAGS.max_training_iter):
         train_batch_data_v, train_batch_label_v = sess.run([train_batch_data, train_batch_label])
-        _, loss_v = sess.run([train_op, loss], {data_ph: train_batch_data_v, label_ph: train_batch_label_v})
+        _, loss_v, infer_v = sess.run([train_op, loss, infer], {data_ph: train_batch_data_v, label_ph: train_batch_label_v})
 
         if i % 100 == 0:
-            print("i: %d train_loss: %.2f"%(i, loss_v))
+            print("i: %d train_loss: %.5f"%(i, loss_v))
 
 
 

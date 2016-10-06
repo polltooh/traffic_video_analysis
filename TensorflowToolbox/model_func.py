@@ -42,8 +42,8 @@ def _variable_with_weight_decay(name, shape, wd = 0.0):
         tf.add_to_collection('losses', weight_decay)
     return var
 
-def _conv2d(x, w, b, strides = [1,1,1,1]):
-    return tf.nn.bias_add(tf.nn.conv2d(x, w,strides=strides, padding = 'SAME'), b)
+def _conv2d(x, w, b, strides, padding):
+    return tf.nn.bias_add(tf.nn.conv2d(x, w,strides=strides, padding = padding), b)
 
 def _conv3d(x, w, b, strides = [1,1,1,1,1], padding = 'SAME'):
     return tf.nn.bias_add(tf.nn.conv3d(x, w,strides=strides, padding = padding), b)
@@ -51,8 +51,8 @@ def _conv3d(x, w, b, strides = [1,1,1,1,1], padding = 'SAME'):
 def add_leaky_relu(hl_tensor, leaky_param):
     return tf.maximum(hl_tensor, tf.mul(leaky_param, hl_tensor))
 
-def _deconv2d(x, w, b, output_shape, strides = [1,1,1,1]):
-    return tf.nn.bias_add(tf.nn.conv2d_transpose(x, w, output_shape, strides), b)
+def _deconv2d(x, w, b, output_shape, strides, padding):
+    return tf.nn.bias_add(tf.nn.conv2d_transpose(x, w, output_shape, strides, padding), b)
 
 def _unpooling(x, output_size):
     """ NEAREST_NEIGHBOR resize """
@@ -169,23 +169,34 @@ def triplet_loss(infer, labels, radius = 2.0):
 
     return loss
 
-def l2_loss(infer, label, layer_name):
+def l2_loss(infer, label, loss_type, layer_name):
+    """
+    Args:
+        
+        loss_type: 'SUM', 'MEAN'
+                'SUM' uses reduce_sum
+                'MEAN' uses reduce_mean
+    """
     with tf.variable_scope(layer_name):
-        loss = tf.reduce_mean(tf.square(infer - label))
+        if loss_type == 'SUM':
+            loss = tf.reduce_sum(tf.square(infer - label))
+        else:
+            loss = tf.reduce_mean(tf.square(infer - label))
+
     return loss
 
-def convolution_2d_layer(x, kernel_shape, kernel_stride, wd, layer_name):
+def convolution_2d_layer(x, kernel_shape, kernel_stride, padding, wd, layer_name):
     with tf.variable_scope(layer_name):
         weights = _variable_with_weight_decay('weights', kernel_shape, wd)
         biases = _variable_on_cpu('biases', [kernel_shape[-1]], tf.constant_initializer(0.0))
-        conv = _conv2d(x, weights, biases, strides =  kernel_stride)
+        conv = _conv2d(x, weights, biases, kernel_stride, padding)
     return conv
 
-def deconvolution_2d_layer(x, kernel_shape, kernel_stride, output_shape, wd, layer_name):
+def deconvolution_2d_layer(x, kernel_shape, kernel_stride, output_shape, padding, wd, layer_name):
     with tf.variable_scope(layer_name):
         weights = _variable_with_weight_decay('weights', kernel_shape, wd)
         biases = _variable_on_cpu('biases', [kernel_shape[-2]], tf.constant_initializer(0.0))
-        deconv = _deconv2d(x, weights, biases, output_shape, kernel_stride)
+        deconv = _deconv2d(x, weights, biases, output_shape, kernel_stride, padding)
     return deconv
 
 def maxpool_2d_layer(x, kernel_shape, kernel_stride, layer_name):
