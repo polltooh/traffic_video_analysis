@@ -170,8 +170,31 @@ def run_inference_on_image(image):
     #   encoding of the image.
     # Runs the softmax tensor by feeding the image_data as input to the graph.
     feature_map= sess.graph.get_tensor_by_name('mixed_10/join:0')
-    print(feature_map)
+    
+    feature_map_v = sess.run(feature_map, {'DecodeJpeg/contents:0':image_data})
+    feature_map_v = np.squeeze(feature_map_v)
 
+    return feature_map_v
+
+def init_tensor(sess): 
+  #if not tf.gfile.Exists(image):
+  #  tf.logging.fatal('File does not exist %s', image)
+  #image_data = tf.gfile.FastGFile(image, 'rb').read()
+  # Creates graph from saved GraphDef.
+  create_graph()
+  feature_map= sess.graph.get_tensor_by_name('mixed_10/join:0')
+  #feature_map_v = sess.run(feature_map, {'DecodeJpeg/contents:0':image_data})
+  #feature_map_v = np.squeeze(feature_map_v)
+  return feature_map
+
+def run_sess(sess, feature_tensor, image):
+  if not tf.gfile.Exists(image):
+    tf.logging.fatal('File does not exist %s', image)
+
+  image_data = tf.gfile.FastGFile(image, 'rb').read()
+  feature_tensor_v = sess.run(feature_tensor, {'DecodeJpeg/contents:0':image_data})
+  feature_tensor_v = np.squeeze(feature_tensor_v)
+  return feature_tensor_v
 
 def maybe_download_and_extract():
   """Download and extract model tar file."""
@@ -191,12 +214,22 @@ def maybe_download_and_extract():
     print('Succesfully downloaded', filename, statinfo.st_size, 'bytes.')
   tarfile.open(filepath, 'r:gz').extractall(dest_directory)
 
+def save_feature(feature_map, feature_name):
+    feature_map.tofile(feature_name)
 
 def main(_):
   maybe_download_and_extract()
-  image = (FLAGS.image_file if FLAGS.image_file else
-           os.path.join(FLAGS.model_dir, 'cropped_panda.jpg'))
-  run_inference_on_image(image)
+  image_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam253/[Cam253]-2016_4_21_15h_150f/"
+  name_list = os.listdir(image_dir)
+  sess = tf.Session()
+  feature_tensor = init_tensor(sess)
+  for n in name_list:
+      if n.endswith(".jpg"):
+        image = (FLAGS.image_file if FLAGS.image_file else
+            os.path.join(FLAGS.model_dir, image_dir + n))
+        feature_tensor_v = run_sess(sess, feature_tensor, image)
+        feature_name = image_dir + n.replace(".jpg",".mixed10")
+        save_feature(feature_tensor_v, feature_name)
 
 
 if __name__ == '__main__':
