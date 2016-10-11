@@ -27,7 +27,7 @@ tf.app.flags.DEFINE_string('restore_model',False,'''if restore the pre_trained_m
 
 tf.app.flags.DEFINE_string('train_log_dir','train_log',
         '''directory wherer to write event logs''')
-tf.app.flags.DEFINE_integer('max_training_iter', 10000,
+tf.app.flags.DEFINE_integer('max_training_iter', 100000,
         '''the max number of training iteration''')
 tf.app.flags.DEFINE_float('init_learning_rate', 0.001,
         '''initial learning rate''')
