@@ -7,8 +7,8 @@ import data_class
 import fcn_model
 #import save_func as sf
 
-TRAIN_TXT = "../file_list/train_list1.txt"
-TEST_TXT = "../file_list/train_list1.txt"
+TRAIN_TXT = "../file_list/train_list2.txt"
+TEST_TXT = "../file_list/test_list2.txt"
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('feature_row',8,'''the feature row''')
@@ -16,8 +16,8 @@ tf.app.flags.DEFINE_string('feature_col',8,'''the feature col''')
 tf.app.flags.DEFINE_string('feature_cha',2048,'''the feature channel''')
 
 
-tf.app.flags.DEFINE_string('label_row',352,'''the label row''')
-tf.app.flags.DEFINE_string('label_col',240,'''the label col''')
+tf.app.flags.DEFINE_string('label_row',299,'''the label row''')
+tf.app.flags.DEFINE_string('label_col',299,'''the label col''')
 tf.app.flags.DEFINE_string('label_cha',1,'''the label channel''')
 
 
@@ -66,12 +66,13 @@ def train():
     train_test_phase_ph = tf.placeholder(tf.bool, name = 'phase_holder')
 
     #fcn_model.test_infer_size(label_ph)
-
     output_shape = [FLAGS.batch_size, FLAGS.label_row, FLAGS.label_col, FLAGS.label_cha]
 
     infer = fcn_model.inference(data_ph, output_shape, keep_prob_ph, train_test_phase_ph)
     loss = fcn_model.loss(infer, label_ph)
     train_op = fcn_model.train_op(loss, FLAGS.init_learning_rate, global_step)
+
+    test_loss = fcn_model.loss(infer, label_ph)
     sess = tf.Session()
 
     init_op = tf.initialize_all_variables()
@@ -85,10 +86,10 @@ def train():
         _, loss_v, infer_v = sess.run([train_op, loss, infer], {data_ph: train_batch_data_v, label_ph: train_batch_label_v})
 
         if i % 100 == 0:
-            print("i: %d train_loss: %.5f"%(i, loss_v))
-
-
-
+            test_batch_data_v, test_batch_label_v = sess.run([test_batch_data, test_batch_label])
+            test_loss_v = sess.run(test_loss, {data_ph:test_batch_data_v, label_ph:test_batch_label_v})
+            num_car = np.sum(test_batch_label_v)/FLAGS.batch_size
+            print("i: %d train_loss: %.5f, num_car: %.2f, test_loss: %.5f"%(i, loss_v, num_car, test_loss_v))
 
 def main(argv = sys.argv):
     if not os.path.exists(FLAGS.model_dir):

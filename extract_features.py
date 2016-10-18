@@ -39,6 +39,7 @@ import os.path
 import re
 import sys
 import tarfile
+import file_io
 
 import numpy as np
 from six.moves import urllib
@@ -219,17 +220,33 @@ def save_feature(feature_map, feature_name):
 
 def main(_):
   maybe_download_and_extract()
-  image_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam253/[Cam253]-2016_4_21_15h_150f/"
-  name_list = os.listdir(image_dir)
-  sess = tf.Session()
-  feature_tensor = init_tensor(sess)
-  for n in name_list:
-      if n.endswith(".jpg"):
-        image = (FLAGS.image_file if FLAGS.image_file else
-            os.path.join(FLAGS.model_dir, image_dir + n))
-        feature_tensor_v = run_sess(sess, feature_tensor, image)
-        feature_name = image_dir + n.replace(".jpg",".mixed10")
-        save_feature(feature_tensor_v, feature_name)
+
+  video_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam253/"
+  video_list = file_io.get_listfile(video_dir, ".avi")
+  for video in video_list:
+    image_dir = video.replace(".avi","/")
+    name_list = os.listdir(image_dir)
+    sess = tf.Session()
+    feature_tensor = init_tensor(sess)
+    for n in name_list:
+        if n.endswith("_resize.jpg"):
+          image = (FLAGS.image_file if FLAGS.image_file else
+              os.path.join(FLAGS.model_dir, image_dir + n))
+          feature_tensor_v = run_sess(sess, feature_tensor, image)
+          feature_name = image_dir + n.replace(".jpg",".mixed10")
+          save_feature(feature_tensor_v, feature_name)
+
+  #image_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam253/[Cam253]-2016_4_21_15h_150f/"
+  #name_list = os.listdir(image_dir)
+  #sess = tf.Session()
+  #feature_tensor = init_tensor(sess)
+  #for n in name_list:
+  #    if n.endswith("_resize.jpg"):
+  #      image = (FLAGS.image_file if FLAGS.image_file else
+  #          os.path.join(FLAGS.model_dir, image_dir + n))
+  #      feature_tensor_v = run_sess(sess, feature_tensor, image)
+  #      feature_name = image_dir + n.replace(".jpg",".mixed10")
+  #      save_feature(feature_tensor_v, feature_name)
 
 
 if __name__ == '__main__':

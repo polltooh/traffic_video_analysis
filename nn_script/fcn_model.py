@@ -5,19 +5,25 @@ def inference(feature, output_shape, keep_prob, is_train):
     b, h, w, c= feature.get_shape().as_list()
     wd = 0.0
     deconv1_shape = [b, 116, 79, c]
-    deconv1 = mf.deconvolution_2d_layer(feature, [7, 4, 128, c], [1,4,3,1], [b, 38, 25, 128], 'VALID', wd, 'deconv1')
-    deconv2 = mf.deconvolution_2d_layer(deconv1, [5, 5, 64, 128], [1,3,3,1], [b, 116, 79, 64], 'VALID', wd, 'deconv2')
-    deconv3 = mf.deconvolution_2d_layer(deconv2, [5, 5, 1, 64], [1,3,3,1], [b, 352, 240, 1], 'VALID', wd, 'deconv3')
-    return deconv3
+    deconv1 = mf.deconvolution_2d_layer(feature, [3, 3, 128, c], [1,2,2,1], [b, 17, 17, 128], 'VALID', wd, 'deconv1')
+    deconv2 = mf.deconvolution_2d_layer(deconv1, [3, 3, 128, 128], [1,2,2,1], [b, 36, 36, 128], 'VALID', wd, 'deconv2')
+    deconv3 = mf.deconvolution_2d_layer(deconv2, [3, 3, 128, 128], [1,2,2,1], [b, 74, 74, 128], 'VALID', wd, 'deconv3')
+    deconv4 = mf.deconvolution_2d_layer(deconv3, [3, 3, 128, 128], [1,2,2,1], [b, 149, 149, 128], 'VALID', wd, 'deconv4')
+    deconv5 = mf.deconvolution_2d_layer(deconv4, [3, 3, 1, 128], [1,2,2,1], [b, 299, 299, 1], 'VALID', wd, 'deconv5')
+    return deconv5
 
 def test_infer_size(label):
-    conv1 = mf.convolution_2d_layer(label, [5,5,1,1], [1,3,3,1], 'VALID', 0.0, 'conv1')
+    conv1 = mf.convolution_2d_layer(label, [3,3,1,1], [1,2,2,1], 'VALID', 0.0, 'conv1')
     print(conv1)
-    conv2 = mf.convolution_2d_layer(conv1, [5,5,1,1], [1,3,3,1], 'VALID', 0.0, 'conv2')
+    conv2 = mf.convolution_2d_layer(conv1, [3,3,1,1], [1,2,2,1], 'VALID', 0.0, 'conv2')
     print(conv2)
-    conv3 = mf.convolution_2d_layer(conv2, [7,4,1,1], [1,4,3,1], 'VALID', 0.0, 'conv3')
+    conv3 = mf.convolution_2d_layer(conv2, [3,3,1,1], [1,2,2,1], 'VALID', 0.0, 'conv3')
     print(conv3)
-    
+    conv4 = mf.convolution_2d_layer(conv3, [3,3,1,1], [1,2,2,1], 'VALID', 0.0, 'conv4')
+    print(conv4)
+    conv5 = mf.convolution_2d_layer(conv4, [3,3,1,1], [1,2,2,1], 'VALID', 0.0, 'conv5')
+    print(conv5)
+    exit(1) 
 
 def loss(infer, label):
     l2_loss = mf.l2_loss(infer, label, 'SUM', 'l2_loss')
