@@ -30,7 +30,7 @@ def _variable_with_weight_decay(name, shape, wd = 0.0):
             shape: list of ints
             wd: add L2Loss weight decay multiplied by this float. If None, weight
                     decay is not added for this Variable.
-    
+   
     Returns:
             Variable Tensor
     """
@@ -177,6 +177,7 @@ def l2_loss(infer, label, loss_type, layer_name):
                 'SUM' uses reduce_sum
                 'MEAN' uses reduce_mean
     """
+    assert(loss_type == 'SUM' or loss_type == 'MEAN')
     with tf.variable_scope(layer_name):
         if loss_type == 'SUM':
             loss = tf.reduce_sum(tf.square(infer - label))

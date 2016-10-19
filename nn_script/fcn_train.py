@@ -1,5 +1,6 @@
 import tensorflow as tf
 import sys
+import cv2
 import os
 import tensor_data
 import numpy as np
@@ -22,20 +23,24 @@ tf.app.flags.DEFINE_string('label_cha',1,'''the label channel''')
 
 
 tf.app.flags.DEFINE_string('num_gpus',1,'''the number of gpu''')
-tf.app.flags.DEFINE_string('batch_size',5,'''the batch size''')
+tf.app.flags.DEFINE_string('batch_size',32,'''the batch size''')
 tf.app.flags.DEFINE_string('restore_model',False,'''if restore the pre_trained_model''')
 
 tf.app.flags.DEFINE_string('train_log_dir','train_log',
         '''directory wherer to write event logs''')
 tf.app.flags.DEFINE_integer('max_training_iter', 100000,
         '''the max number of training iteration''')
-tf.app.flags.DEFINE_float('init_learning_rate', 0.001,
+tf.app.flags.DEFINE_float('init_learning_rate', 0.0001,
         '''initial learning rate''')
 tf.app.flags.DEFINE_string('model_dir', 'models','''directory where to save the model''')
+tf.app.flags.DEFINE_string('image_dir', 'infer_images','''directory where to save the image''')
 tf.app.flags.DEFINE_string('txt_log', 'train_log.txt','''directory where to save the display log''')
 
-
-
+def norm_image(image):
+    image = (image - np.min(image)) / (np.max(image) - np.min(image)) * 255
+    image = image.astype(np.uint8)
+    return image
+    
 def gen_data_label(file_name, is_train):
     input_class = data_class.DataClass(tf.constant([], tf.string))
     input_class.decode_class= data_class.BINClass([FLAGS.feature_row, FLAGS.feature_col, FLAGS.feature_cha])
@@ -87,9 +92,16 @@ def train():
 
         if i % 100 == 0:
             test_batch_data_v, test_batch_label_v = sess.run([test_batch_data, test_batch_label])
-            test_loss_v = sess.run(test_loss, {data_ph:test_batch_data_v, label_ph:test_batch_label_v})
+            test_loss_v, infer_v = sess.run([test_loss, infer], {data_ph:test_batch_data_v, label_ph:test_batch_label_v})
             num_car = np.sum(test_batch_label_v)/FLAGS.batch_size
             print("i: %d train_loss: %.5f, num_car: %.2f, test_loss: %.5f"%(i, loss_v, num_car, test_loss_v))
+            label_norm = norm_image(test_batch_label_v[0])
+            infer_norm = norm_image(infer_v[0])
+            image = np.hstack((label_norm, infer_norm))
+            #image /= np.max(image) * 255
+            #image = image.astype(np.uint8)
+            cv2.imwrite(FLAGS.image_dir + "/%08d.jpg"%(i/100), image)
+            #cv2.imshow("infer", image)
 
 def main(argv = sys.argv):
     if not os.path.exists(FLAGS.model_dir):
