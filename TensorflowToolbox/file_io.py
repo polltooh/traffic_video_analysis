@@ -39,6 +39,13 @@ def save_file(string_list, file_name, shuffle_data = False):
                 file_string += "\n"
         f.write(file_string)
 
+def get_file_length(file_name):
+    with open(file_name, 'r') as f:
+        s = f.read()
+        s_l = s.split("\n")
+        total_len = len(s_l)
+    return total_len
+
 def save_numpy_array(numpy_array, file_name):
     numpy_array.tofile(file_name)
 

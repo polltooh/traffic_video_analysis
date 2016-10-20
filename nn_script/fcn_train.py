@@ -6,6 +6,7 @@ import tensor_data
 import numpy as np
 import data_class
 import fcn_model
+import save_func as sf
 #import save_func as sf
 
 TRAIN_TXT = "../file_list/train_list2.txt"
@@ -21,14 +22,13 @@ tf.app.flags.DEFINE_string('label_row',299,'''the label row''')
 tf.app.flags.DEFINE_string('label_col',299,'''the label col''')
 tf.app.flags.DEFINE_string('label_cha',1,'''the label channel''')
 
-
 tf.app.flags.DEFINE_string('num_gpus',1,'''the number of gpu''')
 tf.app.flags.DEFINE_string('batch_size',32,'''the batch size''')
 tf.app.flags.DEFINE_string('restore_model',False,'''if restore the pre_trained_model''')
 
 tf.app.flags.DEFINE_string('train_log_dir','train_log',
         '''directory wherer to write event logs''')
-tf.app.flags.DEFINE_integer('max_training_iter', 100000,
+tf.app.flags.DEFINE_integer('max_training_iter', 1000000,
         '''the max number of training iteration''')
 tf.app.flags.DEFINE_float('init_learning_rate', 0.0001,
         '''initial learning rate''')
@@ -80,9 +80,10 @@ def train():
     test_loss = fcn_model.loss(infer, label_ph)
     sess = tf.Session()
 
+    saver = tf.train.Saver()
+
     init_op = tf.initialize_all_variables()
     sess.run(init_op)
-
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord = coord, sess = sess)
 
@@ -90,17 +91,20 @@ def train():
         train_batch_data_v, train_batch_label_v = sess.run([train_batch_data, train_batch_label])
         _, loss_v, infer_v = sess.run([train_op, loss, infer], {data_ph: train_batch_data_v, label_ph: train_batch_label_v})
 
-        if i % 100 == 0:
+        if i % 500 == 0:
             test_batch_data_v, test_batch_label_v = sess.run([test_batch_data, test_batch_label])
             test_loss_v, infer_v = sess.run([test_loss, infer], {data_ph:test_batch_data_v, label_ph:test_batch_label_v})
-            num_car = np.sum(test_batch_label_v)/FLAGS.batch_size
-            print("i: %d train_loss: %.5f, num_car: %.2f, test_loss: %.5f"%(i, loss_v, num_car, test_loss_v))
-            label_norm = norm_image(test_batch_label_v[0])
-            infer_norm = norm_image(infer_v[0])
-            image = np.hstack((label_norm, infer_norm))
-            #image /= np.max(image) * 255
-            #image = image.astype(np.uint8)
-            cv2.imwrite(FLAGS.image_dir + "/%08d.jpg"%(i/100), image)
+            num_car_label = np.sum(test_batch_label_v)/FLAGS.batch_size
+            num_car_infer = np.sum(infer_v)/FLAGS.batch_size
+            print("i: %d train_loss: %.5f, test_loss: %.5f, test_num_car: %.2f, infer_num_car: %.2f"%(i, 
+                                loss_v, test_loss_v, num_car_label, num_car_infer))
+
+        if i % 5000 == 0 or i == FLAGS.max_training_iter - 1:
+            sf.save_model(sess, saver, FLAGS.model_dir, i)
+            #label_norm = norm_image(test_batch_label_v[0])
+            #infer_norm = norm_image(infer_v[0])
+            #image = np.hstack((label_norm, infer_norm))
+            #cv2.imwrite(FLAGS.image_dir + "/%08d.jpg"%(i/100), image)
             #cv2.imshow("infer", image)
 
 def main(argv = sys.argv):

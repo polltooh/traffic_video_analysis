@@ -6,22 +6,23 @@ def inference(feature, output_shape, keep_prob, is_train):
     wd = 0.0
     leaky_param = 0.01
     deconv1_shape = [b, 116, 79, c]
-    deconv1 = mf.deconvolution_2d_layer(feature, [3, 3, 512, c], [1,2,2,1], [b, 17, 17, 512], 'VALID', wd, 'deconv1')
+    deconv1 = mf.deconvolution_2d_layer(feature, [3, 3, 512, c], [2,2], [b, 17, 17, 512], 'VALID', wd, 'deconv1')
     deconv1_relu = mf.add_leaky_relu(deconv1, leaky_param)
 
-    deconv2 = mf.deconvolution_2d_layer(deconv1_relu, [3, 3, 256, 512], [1,2,2,1], [b, 36, 36, 256], 'VALID', wd, 'deconv2')
+    deconv2 = mf.deconvolution_2d_layer(deconv1_relu, [3, 3, 256, 512], [2,2], [b, 36, 36, 256], 'VALID', wd, 'deconv2')
     deconv2_relu = mf.add_leaky_relu(deconv2, leaky_param)
 
-    deconv3 = mf.deconvolution_2d_layer(deconv2_relu, [3, 3, 128, 256], [1,2,2,1], [b, 74, 74, 128], 'VALID', wd, 'deconv3')
+    deconv3 = mf.deconvolution_2d_layer(deconv2_relu, [3, 3, 128, 256], [2,2], [b, 74, 74, 128], 'VALID', wd, 'deconv3')
     deconv3_relu = mf.add_leaky_relu(deconv3, leaky_param)
 
-    deconv4 = mf.deconvolution_2d_layer(deconv3_relu, [3, 3, 64, 128], [1,2,2,1], [b, 149, 149, 64], 'VALID', wd, 'deconv4')
+    deconv4 = mf.deconvolution_2d_layer(deconv3_relu, [3, 3, 64, 128], [2,2], [b, 149, 149, 64], 'VALID', wd, 'deconv4')
     deconv4_relu = mf.add_leaky_relu(deconv4, leaky_param)
 
-    deconv5 = mf.deconvolution_2d_layer(deconv4_relu, [3, 3, 32, 64], [1,2,2,1], [b, 299, 299, 32], 'VALID', wd, 'deconv5')
+    deconv5 = mf.deconvolution_2d_layer(deconv4_relu, [3, 3, 32, 64], [2,2], [b, 299, 299, 32], 'VALID', wd, 'deconv5')
     deconv5_relu = mf.add_leaky_relu(deconv5, leaky_param)
 
-    deconv6 = mf.deconvolution_2d_layer(deconv5, [3, 3, 1, 32], [1,1,1,1], [b, 299, 299, 1], 'SAME', wd, 'deconv6')
+    deconv6 = mf.deconvolution_2d_layer(deconv5, [3, 3, 1, 32], [1,1], [b, 299, 299, 1], 'SAME', wd, 'deconv6')
+
     return deconv6
 
 def test_infer_size(label):
