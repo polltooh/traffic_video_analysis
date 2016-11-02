@@ -25,7 +25,7 @@ def _variable_with_weight_decay(name, shape, wd = 0.0):
     Note that the Variable is initialized with a xavier initialization.
     A weight decay is added only if one is specified.
     
-    Args:
+    #Args:
             name: name of the variable
             shape: list of ints
             wd: add L2Loss weight decay multiplied by this float. If None, weight
@@ -54,9 +54,6 @@ def add_leaky_relu(hl_tensor, leaky_param):
 def _deconv2d(x, w, b, output_shape, strides, padding):
     return tf.nn.bias_add(tf.nn.conv2d_transpose(x, w, output_shape, strides, padding), b)
 
-def _unpooling(x, output_size):
-    """ NEAREST_NEIGHBOR resize """
-    return tf.image.resize_images(x, output_size[1], output_size[2],1)
 
 def _add_leaky_relu(hl_tensor, leaky_param):
     """ add leaky relu layer
@@ -193,8 +190,8 @@ def convolution_2d_layer(x, kernel_shape, kernel_stride, padding, wd, layer_name
     """
     Args:
         x
-        kernel_shape: [height, weights, input_channel, output_channel]
-        kernel_stride: [height, weights]
+        kernel_shape: [height, width, input_channel, output_channel]
+        kernel_stride: [height, width]
         padding: "SAME" or "VALID"
         wd: weight decay params
         layer_name: 
@@ -206,7 +203,37 @@ def convolution_2d_layer(x, kernel_shape, kernel_stride, padding, wd, layer_name
 
     return conv
 
+def fully_connected_layer(x, output_num, wd, layer_name):
+    """
+    Args:
+        x
+        output_num 
+        wd
+        layer_num
+    """
+    input_shape = x.get_shape().as_list()
+    if len(input_shape) > 2:
+        x = tf.reshape(x, [input_shape[0], -1])
+
+    input_shape = x.get_shape().as_list()
+
+    with tf.variable_scope(layer_name):
+        weights = _variable_with_weight_decay("weights", [input_shape[1], output_num], wd)
+        biases = _variable_on_cpu('biases', [output_num], tf.constant_initializer(0.0))
+        fc = tf.matmul(x, weights) + biases
+    return fc
+
 def deconvolution_2d_layer(x, kernel_shape, kernel_stride, output_shape, padding, wd, layer_name):
+    """
+    Args:
+        x
+        kernel_shape: [height, width, output_channel, input_channel]
+        kernel_stride: [height, width]
+        output_shape: [batch_size, height, width, channel]
+        padding: "SAME" or "VALID"
+        wd: weight decay params
+        layer_name: 
+    """
     with tf.variable_scope(layer_name):
         weights = _variable_with_weight_decay('weights', kernel_shape, wd)
         biases = _variable_on_cpu('biases', [kernel_shape[-2]], tf.constant_initializer(0.0))
@@ -275,3 +302,14 @@ def copy_layer(x, layer_handle, repeat_num, layer_name, *params):
         with tf.variable_scope(layer_name + "_%d"%i):
             x = layer_handle(x, *params)
     return x
+
+def unpooling_layer(x, output_size, layer_name):
+    """ Bilinear Interpotation resize 
+    Args:
+        x
+        output_size [image_height, image_width]
+        layer_name 
+    """
+    with tf.variable_scope(layer_name):
+        return tf.image.resize_images(x, output_size[0], output_size[1])
+

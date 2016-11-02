@@ -221,7 +221,7 @@ def save_feature(feature_map, feature_name):
 def main(_):
   maybe_download_and_extract()
 
-  video_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam253/"
+  video_dir = "/home/mscvadmin/traffic_video_analysis/data/Cam691/"
   video_list = file_io.get_listfile(video_dir, ".avi")
   for video in video_list:
     image_dir = video.replace(".avi","/")

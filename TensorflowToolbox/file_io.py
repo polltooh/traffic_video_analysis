@@ -11,6 +11,9 @@ def get_listfile(image_dir, extension = ".jpg"):
     return image_list
 
 def get_dir_list(frame_dir):
+    if not frame_dir.endswith("/"):
+        frame_dir = frame_dir + "/"
+
     dir_list = os.listdir(frame_dir)
     dir_list = [frame_dir + image_dir for image_dir in dir_list]
     return dir_list

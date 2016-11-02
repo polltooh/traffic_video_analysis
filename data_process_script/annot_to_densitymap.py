@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import os
+import file_io
 import numpy as np
 import xmltodict
 import cv2
@@ -46,6 +47,7 @@ def get_density_map(data_name, save_data, show_image = False):
         img.tofile(data_name.replace('xml','desmap'))
 
 if __name__ == "__main__":
+    print(file_io.get_dir_list("../data"))
     path_name = 'data/Cam253/[Cam253]-2016_4_21_15h_150f/'
     list_name = os.listdir(path_name)
     for f in list_name:
