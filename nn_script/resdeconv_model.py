@@ -45,7 +45,7 @@ def inference(feature, output_shape, keep_prob, is_train):
     fc2 = mf.fully_connected_layer(fc1_relu, 1, wd, "fc2")
     fc2_relu = mf.add_leaky_relu(fc2, leaky_param)
 
-    return conv1x1, fc2_relu
+    return deconv32, fc2_relu
 
 def test_infer_size(label):
     conv1 = mf.convolution_2d_layer(label, [3,3,1,1], [2,2], 'VALID', 0.0, 'conv1')
@@ -63,7 +63,7 @@ def test_infer_size(label):
 def loss(infer, count_diff_infer, label):
     l2_loss = tf.reduce_mean(tf.reduce_sum(tf.square(infer - label), [1,2,3]), name = 'l2_loss')
     count_infer = tf.add(count_diff_infer, tf.reduce_sum(infer, [1,2,3]), name = "count_infer")
-    c_lambda = 1.0
+    c_lambda = 0.01
     count_loss = tf.mul(c_lambda, tf.reduce_mean(tf.square(count_infer - tf.reduce_sum(label, [1,2,3]))),
                     name = 'count_loss')
 
