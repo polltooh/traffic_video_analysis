@@ -201,7 +201,10 @@ def huber_loss(infer, label, epsilon, layer_name):
         l1_part, l2_part = tf.dynamic_partition(abs_diff, index, 2)
         #l1_loss = tf.reduce_mean(l1_part, name = 'l1_loss')
         #l2_loss = tf.reduce_mean(tf.square(l2_part), name = 'l2_loss')
-        hloss = tf.reduce_mean(tf.concat(0, [l1_part, tf.square(l2_part)]), name = 'huber_loss_sum')
+        l1_part_loss = epsilon * (l1_part - 0.5 * epsilon)
+        l2_part_loss = 0.5 * tf.square(l2_part)
+        hloss = tf.reduce_mean(tf.concat(0, [l1_part_loss,l2_part_loss]), 
+                    name = 'huber_loss_sum')
     return hloss
 
 def convolution_2d_layer(x, kernel_shape, kernel_stride, padding, wd, layer_name):
