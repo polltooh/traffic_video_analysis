@@ -61,7 +61,7 @@ class ImageClass():
         image_tensor = self.decode_fun(image_tensor, channels = self.channels, ratio = self.ratio)
         image_tensor = tf.image.convert_image_dtype(image_tensor, tf.float32)
         image_tensor = tf.image.resize_images(image_tensor, 
-                                        self.shape[0] + self.offset, self.shape[1] + self.offset)
+                                        [self.shape[0] + self.offset, self.shape[1] + self.offset])
         
         if distort_data:
                 # it will crop in the function

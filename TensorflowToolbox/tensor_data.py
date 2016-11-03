@@ -32,6 +32,8 @@ def file_queue_to_batch_data(filename_queue, data_classes, is_train, batch_size,
             whiten_data: apply image whitening to the image
             distort_data: apply random cropping and fliping 
     """
+    if is_train:
+       distort_data = False
 
     data_classes = check_list(data_classes)
     data_type_list = list()

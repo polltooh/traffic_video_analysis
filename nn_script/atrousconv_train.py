@@ -5,20 +5,20 @@ import os
 import tensor_data
 import numpy as np
 import data_class
-import resdeconv_model as model
+import atrousconv_model as model
 import save_func as sf
 import image_utility_func as iuf
 #import save_func as sf
 
 #TRAIN_TXT = "../file_list/train_list5.txt"
 #TEST_TXT = "../file_list/test_list5.txt"
-TRAIN_TXT = "../file_list/spain_train_list1.txt"
-TEST_TXT = "../file_list/spain_test_list1.txt"
+TRAIN_TXT = "../file_list/spain_train_list2.txt"
+TEST_TXT = "../file_list/spain_test_list2.txt"
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('feature_row',56,'''the feature row''')
-tf.app.flags.DEFINE_string('feature_col',56,'''the feature col''')
-tf.app.flags.DEFINE_string('feature_cha',1792,'''the feature channel''')
+tf.app.flags.DEFINE_string('feature_row',227,'''the feature row''')
+tf.app.flags.DEFINE_string('feature_col',227,'''the feature col''')
+tf.app.flags.DEFINE_string('feature_cha',3,'''the feature channel''')
 
 
 #tf.app.flags.DEFINE_string('label_row',299,'''the label row''')
@@ -31,14 +31,14 @@ tf.app.flags.DEFINE_string('num_gpus',1,'''the number of gpu''')
 tf.app.flags.DEFINE_string('batch_size',16, '''the batch size''')
 tf.app.flags.DEFINE_string('restore_model',False,'''if restore the pre_trained_model''')
 
-tf.app.flags.DEFINE_string('train_log_dir','resdeconv_train_log',
+tf.app.flags.DEFINE_string('train_log_dir','atrous_train_log',
         '''directory wherer to write event logs''')
 tf.app.flags.DEFINE_integer('max_training_iter', 1000000,
         '''the max number of training iteration''')
 tf.app.flags.DEFINE_float('init_learning_rate', 0.0001,
         '''initial learning rate''')
-tf.app.flags.DEFINE_string('model_dir', 'resdeconv_models','''directory where to save the model''')
-tf.app.flags.DEFINE_string('image_dir', 'tesdeconv_infer_images','''directory where to save the image''')
+tf.app.flags.DEFINE_string('model_dir', 'atrous_models','''directory where to save the model''')
+tf.app.flags.DEFINE_string('image_dir', 'atrous_infer_images','''directory where to save the image''')
 tf.app.flags.DEFINE_string('txt_log', 'train_log.txt','''directory where to save the display log''')
 
 def norm_image(image):
@@ -53,7 +53,8 @@ def convert_image_name(image_name):
 
 def gen_data_label(file_name, is_train):
     input_class = data_class.DataClass(tf.constant([], tf.string))
-    input_class.decode_class= data_class.BINClass([FLAGS.feature_row, FLAGS.feature_col, FLAGS.feature_cha])
+    input_class.decode_class= data_class.JPGClass([FLAGS.feature_row, FLAGS.feature_col], 
+                        FLAGS.feature_cha, 0)
     
     label_class = data_class.DataClass(tf.constant([], tf.string))
     label_class.decode_class = data_class.BINClass([FLAGS.label_row, FLAGS.label_col, FLAGS.label_cha])
@@ -77,7 +78,7 @@ def save_results(batch_label, batch_infer, batch_name, result_list):
         stack_image = np.hstack((image, label_norm, infer_norm))
         iuf.show_image(stack_image, normalize = False)
         continue
-        iuf.save_image(stack_image, FLAGS.result_dir + "/" + image_base_name.replace(".jpg", "resdeconv_result.jpg"))
+        iuf.save_image(stack_image, FLAGS.result_dir + "/" + image_base_name.replace(".jpg", "atrous_result.jpg"))
         batch_infer[i].tofile(FLAGS.result_dir + "/" + image_base_name.replace(".jpg",".npy"))
         num_car_label = np.sum(batch_label[i])
         num_car_infer = np.sum(batch_infer[i])
