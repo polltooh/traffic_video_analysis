@@ -11,7 +11,8 @@ import file_io
 import image_utility_func as iuf
 #import save_func as sf
 
-TEST_TXT = "../file_list/test_list5.txt"
+#TEST_TXT = "../file_list/test_list5.txt"
+TEST_TXT = "../file_list/spain_test_list1.txt"
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('feature_row',56,'''the feature row''')
@@ -33,8 +34,7 @@ tf.app.flags.DEFINE_integer('max_training_iter', 100000,
 tf.app.flags.DEFINE_float('init_learning_rate', 0.0001,
         '''initial learning rate''')
 tf.app.flags.DEFINE_string('model_dir', 'resdeconv_models','''directory where to save the model''')
-tf.app.flags.DEFINE_string('image_dir', 'tesdeconv_infer_images','''directory where to save the image''')
-tf.app.flags.DEFINE_string('result_dir', 'resdeconv_results3','''directory where to save the results''')
+tf.app.flags.DEFINE_string('result_dir', 'spain_resdeconv_results','''directory where to save the results''')
 tf.app.flags.DEFINE_string('txt_log', 'train_log.txt','''directory where to save the display log''')
 
 def convert_image_name(image_name):
