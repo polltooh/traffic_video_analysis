@@ -61,10 +61,10 @@ def test_infer_size(label):
     exit(1) 
 
 def loss(infer, count_diff_infer, label):
-    #l2_loss = tf.reduce_mean(tf.reduce_sum(tf.square(infer - label), [1,2,3]), name = 'l2_loss')
-    huber_epsilon = 5.0
-    l2_loss = mf.huber_loss(tf.reduce_sum(infer, [1,2,3]), tf.reduce_sum(label, [1,2,3]), huber_epsilon, 'density_loss')
+    l2_loss = tf.reduce_mean(tf.reduce_sum(tf.square(infer - label), [1,2,3]), name = 'l2_loss')
+    #l2_loss = mf.huber_loss(tf.reduce_sum(infer, [1,2,3]), tf.reduce_sum(label, [1,2,3]), huber_epsilon, 'density_loss')
 
+    huber_epsilon = 5.0
     c_lambda = 1.0
     count_infer = tf.add(count_diff_infer, tf.reduce_sum(infer, [1,2,3]), name = "count_infer")
     count_loss = tf.mul(c_lambda, mf.huber_loss(count_infer, tf.reduce_sum(label, [1,2,3]), huber_epsilon, 'huber_loss'),
