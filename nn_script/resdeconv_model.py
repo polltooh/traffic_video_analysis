@@ -18,8 +18,10 @@ def inference(feature, output_shape, keep_prob, is_train):
     deconv22_relu = mf.add_leaky_relu(deconv22, leaky_param)
     
     deconv31 = mf.deconvolution_2d_layer(deconv22_relu, [3, 3, 64, 128], [2,2], [b, 227, 227, 64], 'VALID', wd, 'deconv31')
-    deconv31_relu = mf.add_leaky_relu(deconv31, leaky_param = 0.0)
+    deconv31_relu = mf.add_leaky_relu(deconv31, leaky_param)
     deconv32 = mf.deconvolution_2d_layer(deconv31_relu, [3, 3, 1, 64], [1,1], [b, 227, 227, 1], 'SAME', wd, 'deconv32')
+    deconv32_relu = mf.add_leaky_relu(deconv32, leaky_param = 0.0)
+
     #conv1x1 = mf.convolution_2d_layer(deconv31_relu, [1,1,64,1], [1,1],"VALID", wd, 'conv1x1')
    
 
@@ -39,13 +41,13 @@ def inference(feature, output_shape, keep_prob, is_train):
     #deconv31_relu = mf.add_leaky_relu(deconv31, leaky_param)
     #deconv32 = mf.deconvolution_2d_layer(deconv31_relu, [3, 3, 1, 32], [1,1], [b, 299, 299, 1], 'SAME', wd, 'deconv32')
     
-    fc1 = mf.fully_connected_layer(deconv32, 1000, wd, "fc1")
+    fc1 = mf.fully_connected_layer(deconv32_relu, 1000, wd, "fc1")
     #fc1 = mf.fully_connected_layer(conv1x1, 1000, wd, "fc1")
     fc1_relu = mf.add_leaky_relu(fc1, leaky_param)
     fc2 = mf.fully_connected_layer(fc1_relu, 1, wd, "fc2")
     fc2_relu = mf.add_leaky_relu(fc2, leaky_param)
 
-    return deconv32, fc2_relu
+    return deconv32_relu, fc2_relu
 
 def test_infer_size(label):
     conv1 = mf.convolution_2d_layer(label, [3,3,1,1], [2,2], 'VALID', 0.0, 'conv1')

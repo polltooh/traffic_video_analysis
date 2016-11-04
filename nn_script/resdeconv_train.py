@@ -10,10 +10,10 @@ import save_func as sf
 import image_utility_func as iuf
 #import save_func as sf
 
-#TRAIN_TXT = "../file_list/train_list5.txt"
-#TEST_TXT = "../file_list/test_list5.txt"
-TRAIN_TXT = "../file_list/spain_train_list1.txt"
-TEST_TXT = "../file_list/spain_test_list1.txt"
+TRAIN_TXT = "../file_list/train_list5.txt"
+TEST_TXT = "../file_list/test_list5.txt"
+#TRAIN_TXT = "../file_list/spain_train_list1.txt"
+#TEST_TXT = "../file_list/spain_test_list1.txt"
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('feature_row',56,'''the feature row''')
