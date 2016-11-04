@@ -197,7 +197,7 @@ def huber_loss(infer, label, epsilon, layer_name):
     """
     with tf.variable_scope(layer_name):
         abs_diff = tf.abs(tf.sub(infer, label));
-        index = tf.to_int32(abs_diff > epsilon, name = 'partition_index')
+        index = tf.to_int32(abs_diff <= epsilon, name = 'partition_index')
         l1_part, l2_part = tf.dynamic_partition(abs_diff, index, 2)
         #l1_loss = tf.reduce_mean(l1_part, name = 'l1_loss')
         #l2_loss = tf.reduce_mean(tf.square(l2_part), name = 'l2_loss')
