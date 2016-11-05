@@ -106,7 +106,7 @@ def train():
     #        if (d != gpu_list[0]):
     #            tf.get_variable_scope().reuse_variables()
     infer, count_diff_infer = model.inference(data_ph, output_shape, keep_prob_ph, train_test_phase_ph)
-    loss = model.loss(infer, count_diff_infer, label_ph)
+    loss, _ = model.loss(infer, count_diff_infer, label_ph)
     train_op = model.train_op(loss, FLAGS.init_learning_rate, global_step)
 
     sess = tf.Session()
@@ -115,10 +115,10 @@ def train():
     sf.add_loss()
     train_sum = tf.merge_all_summaries()
 
-    test_count_loss = tf.reduce_mean(count_diff_infer, name = "test_count")
-    test_loss = model.loss(infer, count_diff_infer, label_ph)
+    #test_count_loss = tf.reduce_mean(count_diff_infer, name = "test_count")
+    test_loss, test_count = model.loss(infer, count_diff_infer, label_ph)
 
-    test_count_sum = tf.scalar_summary("test_count_loss", test_count_loss)
+    test_count_sum = tf.scalar_summary("test_count", tf.reduce_mean(test_count))
     test_sum = tf.scalar_summary("test_loss", test_loss)
 
     sum_writer = tf.train.SummaryWriter(FLAGS.train_log_dir, sess.graph)
@@ -141,21 +141,22 @@ def train():
         _, loss_v, infer_v, train_sum_v = sess.run([train_op, loss, infer, train_sum], {data_ph: train_batch_data_v, 
                                         label_ph: train_batch_label_v,
                                         train_test_phase_ph:True})
-        if i % 100 == 0:
+        if i % 20 == 0:
             test_batch_data_v, test_batch_label_v, test_batch_name_v = \
                                 sess.run([test_batch_data, test_batch_label, test_batch_name])
 
-            test_loss_v, test_count_loss_v, infer_v ,test_sum_v ,test_count_sum_v = \
-                                                                sess.run([test_loss, test_count_loss,
+            test_loss_v, test_count_v, infer_v ,test_sum_v ,test_count_sum_v = \
+                                                                sess.run([test_loss, test_count,
                                                                         infer, test_sum, test_count_sum], 
                                                                         {data_ph:test_batch_data_v, 
                                                                         label_ph:test_batch_label_v,
                                                                         train_test_phase_ph:False})
 
             num_car_label = np.sum(test_batch_label_v)/FLAGS.batch_size
-            num_car_infer = np.sum(infer_v)/FLAGS.batch_size
-            print("i: %d train_loss: %.5f, test_loss: %.5f, test_num_car: %.2f, infer_num_car: %.2f"%(i, 
-                                loss_v, test_loss_v, num_car_label, num_car_infer))
+            num_car_infer = np.mean(test_count_v)
+            num_car_diff = np.mean(np.abs(np.sum(test_batch_label_v, axis = (1,2,3)) - test_count_v))
+            print("i: %d train_loss: %.5f, test_loss: %.5f, test_num_car: %.2f, infer_num_car: %.2f, num_car_diff: %.2f"%(i, 
+                                loss_v, test_loss_v, num_car_label, num_car_infer, num_car_diff))
             
             sum_writer.add_summary(train_sum_v, i)
             sum_writer.add_summary(test_sum_v, i)
