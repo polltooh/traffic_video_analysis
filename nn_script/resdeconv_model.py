@@ -19,10 +19,16 @@ def inference(feature, output_shape, keep_prob, is_train):
     
     deconv31 = mf.deconvolution_2d_layer(deconv22_relu, [3, 3, 64, 128], [2,2], [b, 227, 227, 64], 'VALID', wd, 'deconv31')
     deconv31_relu = mf.add_leaky_relu(deconv31, leaky_param)
-    deconv32 = mf.deconvolution_2d_layer(deconv31_relu, [3, 3, 1, 64], [1,1], [b, 227, 227, 1], 'SAME', wd, 'deconv32')
-    deconv32_relu = mf.add_leaky_relu(deconv32, leaky_param = 0.0)
 
-    #conv1x1 = mf.convolution_2d_layer(deconv31_relu, [1,1,64,1], [1,1],"VALID", wd, 'conv1x1')
+    #deconv32 = mf.deconvolution_2d_layer(deconv31_relu, [3, 3, 1, 64], [1,1], [b, 227, 227, 1], 'SAME', wd, 'deconv32')
+    #deconv32_relu = mf.add_leaky_relu(deconv32, leaky_param = 0.0)
+
+    conv1 = mf.convolution_2d_layer(deconv31_relu, [3,3,64,3], [1,1],"SAME", wd, 'conv3x3')
+    conv1_relu = mf.add_leaky_relu(conv1, leaky_param)
+
+    conv2 = mf.convolution_2d_layer(conv1_relu, [1,1,3,1], [1,1],"SAME", wd, 'conv1x1')
+    conv2_sig = tf.sigmoid(conv2, name = 'conv2_sig')
+    #conv2_relu = mf.add_leaky_relu(conv2, leaky_param = 0.0)
    
 
     #feature_pad = tf.pad(feature, [[0,0],[9,9],[9,9],[0, 0]])
@@ -41,13 +47,14 @@ def inference(feature, output_shape, keep_prob, is_train):
     #deconv31_relu = mf.add_leaky_relu(deconv31, leaky_param)
     #deconv32 = mf.deconvolution_2d_layer(deconv31_relu, [3, 3, 1, 32], [1,1], [b, 299, 299, 1], 'SAME', wd, 'deconv32')
     
-    fc1 = mf.fully_connected_layer(deconv32_relu, 1000, wd, "fc1")
-    #fc1 = mf.fully_connected_layer(conv1x1, 1000, wd, "fc1")
+    #fc1 = mf.fully_connected_layer(deconv32_relu, 1000, wd, "fc1")
+    fc1 = mf.fully_connected_layer(conv2, 1000, wd, "fc1")
     fc1_relu = mf.add_leaky_relu(fc1, leaky_param)
     fc2 = mf.fully_connected_layer(fc1_relu, 1, wd, "fc2")
     fc2_relu = mf.add_leaky_relu(fc2, leaky_param)
 
-    return deconv32_relu, fc2_relu
+    return conv2_sig, fc2_relu
+    #return deconv32_relu, fc2_relu
 
 def test_infer_size(label):
     conv1 = mf.convolution_2d_layer(label, [3,3,1,1], [2,2], 'VALID', 0.0, 'conv1')
@@ -67,8 +74,8 @@ def loss(infer, count_diff_infer, label):
     #l2_loss = mf.huber_loss(tf.reduce_sum(infer, [1,2,3]), tf.reduce_sum(label, [1,2,3]), huber_epsilon, 'density_loss')
 
     huber_epsilon = 5.0
-    c_lambda = 1.0
-    count_infer = tf.add(count_diff_infer, tf.reduce_sum(infer, [1,2,3]), name = "count_infer")
+    c_lambda = 0.1
+    count_infer = tf.add(tf.squeeze(count_diff_infer), tf.reduce_sum(infer, [1,2,3]), name = "count_infer")
     count_loss = tf.mul(c_lambda, mf.huber_loss(count_infer, tf.reduce_sum(label, [1,2,3]), huber_epsilon, 'huber_loss'),
                 name = 'count_loss')
     #count_loss = tf.mul(c_lambda, tf.reduce_mean(tf.square(count_infer - tf.reduce_sum(label, [1,2,3]))),
@@ -77,7 +84,7 @@ def loss(infer, count_diff_infer, label):
     tf.add_to_collection('losses', count_loss)
     tf.add_to_collection('losses', l2_loss)
 
-    return tf.add_n(tf.get_collection('losses'), name = 'total_loss')
+    return tf.add_n(tf.get_collection('losses'), name = 'total_loss'), count_infer
     
 def train_op(loss, learning_rate, global_step):
     optimizer = tf.train.AdamOptimizer(learning_rate, epsilon = 1.0)
