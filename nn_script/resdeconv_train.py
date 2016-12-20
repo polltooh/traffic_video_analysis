@@ -164,7 +164,7 @@ def train():
             #save_results(test_batch_label_v, infer_v, test_batch_name_v, result_list)
             #label_norm = iuf.norm_image(batch_label[i])
 
-        if i != 0 and (i % 1000 == 0 or i == FLAGS.max_training_iter - 1):
+        if i != 0 and (i % 200 == 0 or i == FLAGS.max_training_iter - 1):
             sf.save_model(sess, saver, FLAGS.model_dir, i)
             #label_norm = norm_image(test_batch_label_v[0])
             #infer_norm = norm_image(infer_v[0])

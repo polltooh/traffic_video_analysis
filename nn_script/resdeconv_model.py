@@ -5,8 +5,9 @@ def inference(feature, output_shape, keep_prob, is_train):
     b, h, w, c= feature.get_shape().as_list()
     wd = 0.0004
     leaky_param = 0.01
+    f_select = mf.convolution_2d_layer(feature, [1,1, c, 1024], [1,1], "SAME", wd, 'f_select')
 
-    deconv11 = mf.deconvolution_2d_layer(feature, [3, 3, 256, c], [1,1], [b, 56, 56, 256], 'SAME', wd, 'deconv11')
+    deconv11 = mf.deconvolution_2d_layer(f_select, [3, 3, 256, 1024], [1,1], [b, 56, 56, 256], 'SAME', wd, 'deconv11')
     deconv11_relu = mf.add_leaky_relu(deconv11, leaky_param)
 
     deconv12 = mf.deconvolution_2d_layer(deconv11_relu, [3, 3, 256, 256], [1,1], [b, 56, 56, 256], 'SAME', wd, 'deconv12')
@@ -27,8 +28,8 @@ def inference(feature, output_shape, keep_prob, is_train):
     conv1_relu = mf.add_leaky_relu(conv1, leaky_param)
 
     conv2 = mf.convolution_2d_layer(conv1_relu, [1,1,3,1], [1,1],"SAME", wd, 'conv1x1')
-    conv2_sig = tf.sigmoid(conv2, name = 'conv2_sig')
-    #conv2_relu = mf.add_leaky_relu(conv2, leaky_param = 0.0)
+    #conv2_sig = tf.sigmoid(conv2, name = 'conv2_sig')
+    conv2_relu = mf.add_leaky_relu(conv2, leaky_param = 0.0)
    
 
     #feature_pad = tf.pad(feature, [[0,0],[9,9],[9,9],[0, 0]])
@@ -53,7 +54,7 @@ def inference(feature, output_shape, keep_prob, is_train):
     fc2 = mf.fully_connected_layer(fc1_relu, 1, wd, "fc2")
     fc2_relu = mf.add_leaky_relu(fc2, leaky_param)
 
-    return conv2_sig, fc2_relu
+    return conv2_relu, fc2_relu
     #return deconv32_relu, fc2_relu
 
 def test_infer_size(label):

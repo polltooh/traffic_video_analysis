@@ -5,6 +5,7 @@ import os
 import tensor_data
 import numpy as np
 import data_class
+import scipy.stats as ss
 import resdeconv_model as model
 import save_func as sf
 import file_io
@@ -12,7 +13,8 @@ import image_utility_func as iuf
 #import save_func as sf
 
 #TEST_TXT = "../file_list/test_list5.txt"
-TEST_TXT = "../file_list/spain_test_list1.txt"
+TEST_TXT = "../file_list/cam691_test1.txt"
+#TEST_TXT = "../file_list/spain_test_list1.txt"
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('feature_row',56,'''the feature row''')
@@ -34,7 +36,7 @@ tf.app.flags.DEFINE_integer('max_training_iter', 100000,
 tf.app.flags.DEFINE_float('init_learning_rate', 0.0001,
         '''initial learning rate''')
 tf.app.flags.DEFINE_string('model_dir', 'resdeconv_models','''directory where to save the model''')
-tf.app.flags.DEFINE_string('result_dir', 'spain_resdeconv_results','''directory where to save the results''')
+tf.app.flags.DEFINE_string('result_dir', 'cam691_results','''directory where to save the results''')
 tf.app.flags.DEFINE_string('txt_log', 'train_log.txt','''directory where to save the display log''')
 
 def convert_image_name(image_name):
@@ -50,13 +52,16 @@ def save_results(batch_label, batch_infer, batch_diff_infer, batch_name, result_
         image = iuf.load_image(image_name)
         image = iuf.resize_image(image, (FLAGS.label_row, FLAGS.label_col))
         label_norm = iuf.repeat_image(iuf.norm_image(batch_label[i]))
+
+        num_car_label = np.sum(batch_label[i])
+        num_car_infer = np.sum(batch_infer[i]) + batch_diff_infer[i][0]
+
+        batch_infer[i] = ss.threshold(batch_infer[i], threshmin = 0.0, newval = 0)
         infer_norm = iuf.repeat_image(iuf.norm_image(batch_infer[i]))
         stack_image = np.hstack((image, label_norm, infer_norm))
         #iuf.show_image(stack_image, normalize = False)
         iuf.save_image(stack_image, FLAGS.result_dir + "/" + image_base_name.replace(".jpg", "resdeconv_result.jpg"))
         batch_infer[i].tofile(FLAGS.result_dir + "/" + image_base_name.replace(".jpg",".npy"))
-        num_car_label = np.sum(batch_label[i])
-        num_car_infer = np.sum(batch_infer[i]) + batch_diff_infer[i][0]
         print("label: %.2f, infer: %.2f"%(num_car_label, num_car_infer))
         result_list.append(image_name + " " + str(num_car_label) + " " + str(num_car_infer))
 

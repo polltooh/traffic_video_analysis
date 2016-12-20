@@ -144,6 +144,11 @@ def _batch_norm(inputs, decay = 0.999, center = True, scale = False, epsilon = 0
 
         return outputs
 
+def batch_norm(x, is_train, layer_name):
+    with tf.variable_scope(layer_name):
+        bn = _batch_norm(x, is_training = is_train)
+    return bn
+
 def triplet_loss(infer, labels, radius = 2.0):
     """
     Args:
