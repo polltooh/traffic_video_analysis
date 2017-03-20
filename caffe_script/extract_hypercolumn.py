@@ -6,7 +6,14 @@ import tensorflow as tf
 import file_io
 import cv2
 
-caffe_root = '/home/mscvadmin/caffe/'
+# Please set the root of caffe
+caffe_root = ""
+
+if caffe_root == "":
+    print("Please set the root of caffe")
+    exit(1)
+
+file_list_name = "../file_list/image_name_list.txt"
 
 if os.path.isfile(caffe_root + 'models/resnet/ResNet-152-model.caffemodel'):
     print 'CaffeNet found.'
@@ -49,37 +56,22 @@ def resize_image(np_array, image_size):
     return new_array
 
 def process_image(image_name):
-    #conv1 = net.blobs['conv1'].data.squeeze().transpose((1,2,0))
     res2a = net.blobs['res2a'].data.squeeze().transpose((1,2,0))
     res3a = net.blobs['res3a'].data.squeeze().transpose((1,2,0))
     res4a = net.blobs['res4a'].data.squeeze().transpose((1,2,0))
-    #res5a = net.blobs['res5a'].data.squeeze().transpose((1,2,0))
 
     image = caffe.io.load_image(image_name)
     transformed_image = transformer.preprocess('data', image)
     net.blobs['data'].data[...] = transformed_image
     net.forward()
-    #conv1 = resize_image(conv1, output_shape)
     res2a = resize_image(res2a, output_shape)
     res3a = resize_image(res3a, output_shape)
     res4a = resize_image(res4a, output_shape)
-    #res5a = resize_image(res5a, output_shape)
-
-    #res2a = imresize(res2a, output_shape)
-    #res3a = imresize(res3a, output_shape)
-    #res4a = imresize(res4a, output_shape)
-    #res5a = imresize(res5a, output_shape + (output_shape[2], 1))
-    #res2a = cv2.resize(res2a, output_shape)
-    #res3a = cv2.resize(res3a, output_shape)
-    #res4a = cv2.resize(res4a, output_shape)
-    #res5a = cv2.resize(res5a, output_shape)
-
-    #hypercolumn = np.concatenate((conv1, res2a, res3a, res4a, res5a), 2)
     """ shape of hypercolumn is (56, 56, 1792) """
     hypercolumn = np.concatenate((res2a, res3a, res4a), 2)
     return hypercolumn
 
-image_name_list = file_io.read_file("../file_list/image_name_list.txt")
+image_name_list = file_io.read_file(file_list_name)
 count = 0
 for image_name in image_name_list:
     hypercolumn = process_image(image_name)
@@ -87,7 +79,3 @@ for image_name in image_name_list:
     hypercolumn.tofile(feature_name)
     count = count + 1
     print("count: %d / %d"%(count , len(image_name_list)))
-#print(res2a.shape)
-#print(res3a.shape)
-#print(res4a.shape)
-#print(res5a.shape)

@@ -1,4 +1,4 @@
-import tensorflow as tf
+iport tensorflow as tf
 import model_func as mf
 
 def inference(image, output_shape, keep_prob, is_train):
