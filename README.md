@@ -1,6 +1,6 @@
 # traffic_video_analysis
 
-This work is the official codes for paper: S. Zhang, G. Wu, J. Costeira, J. Moura, “Deep Understanding of Traffic Density from Large-Scale Web Camera Data”, accepted by Conference on Computer Vision and Pattern Recognition (CVPR) 2017.
+This work is the official codes for paper: S. Zhang, G. Wu, J. Costeira, J. Moura, [“Deep Understanding of Traffic Density from Large-Scale Web Camera Data”](https://arxiv.org/abs/1703.05868), accepted by Conference on Computer Vision and Pattern Recognition (CVPR) 2017.
 
 # Please email the author citycam12@gmail.com if you are interested in the training code.
 
